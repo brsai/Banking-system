@@ -1,0 +1,12 @@
+done in cloudex lab.
+
+hadoop fs -mkdir /user/suramvinayreddy5167/bfms
+hadoop fs -mkdir /user/suramvinayreddy5167/bfms/customers/hot
+hadoop fs -mkdir /user/suramvinayreddy5167/bfms/accounts/hot
+hadoop fs -mkdir /user/suramvinayreddy5167/bfms/bank_transactions/cold
+hadoop fs -mkdir /user/suramvinayreddy5167/bfms/bank_transactions/hot
+hadoop fs -mkdir /user/suramvinayreddy5167/bfms/atm_transactions/hot
+hadoop fs -mkdir /user/suramvinayreddy5167/bfms/loans/hot
+hadoop fs -mkdir /user/suramvinayreddy5167/bfms/debitcards/hot
+hadoop fs -mkdir /user/suramvinayreddy5167/bfms/creditcards/hot
+hadoop fs -mkdir /user/suramvinayreddy5167/bfms/accountscustomers\hot

@@ -1,0 +1,21 @@
+1)Count of month wise transactions of customers
+
+select count(*) as transactionformonth,c.cust_id,c.first_name, year(b.dateoftrans) as year,month(b.dateoftrans) as trans_month from vvbank_transactions b inner join vvaccounts_customers ac on ac.account_no=b.account_no inner join vvcustomers c on c.cust_id=ac.customer_id group by month(b.dateoftrans),year(b.dateoftrans),c.first_name,c.cust_id order by transactionformonth desc limit 10;
+
+2)sum of loan taken from bank branch wise 
+select b.branch_id,b.branch_name,sum(l.loan_taken) as total_loan ,sum(l.amount_tobe_paid-l.loan_paid)from vvbranches b inner join vvloans l on l.loan_branch=b.branch_id group by b.branch_id;
+
+
+3)sum of accountbalnce in accounts branchwise and accountstype wise
+select b.branch_id,b.branch_name,b.street_address,a.account_type,sum(a.account_balance) as total_amount from vvbranches b inner join vvaccounts a on b.branch_id=b.branch_id group by a.branch_id,a.account_type ,b.branch_name,b.street_address order by total_amount desc limit 1;
+
+4) find transaction done at which atm
+select bt.trans_id,c.first_name,bt.account_no,bt.trans_type,bt.dateoftrans,bt.amount,atm.atm_id,atml.area,atml.city from vvbank_transactions bt  inner join vvaccounts a on a.account_no=bt.account_no inner join vvaccounts_customers ac on ac.account_no=a.account_no inner join vvcustomers c on c.cust_id=ac.customer_id inner join vvatm_transactions atm on bt.trans_id=atm.trans_id inner join vvatm_loc atml on atml.atm_id=atml.atm_id;
+
+
+5)Customer whose  credit_score is lessthan 800 and maxlimit is greater 50000
+
+select * from vvvcredit_cards cc inner join vvcustomers c on c.cust_id=cc.cust_id where maximum_limit>50000 and credit_score<800;
+
+6)count the number of accounts opened after may
+select count(*) from vvaccounts where dat_opened>'2020-05-01'

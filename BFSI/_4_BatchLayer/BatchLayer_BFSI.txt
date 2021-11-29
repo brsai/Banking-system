@@ -1,0 +1,205 @@
+package cts.analytics
+import org.apache.spark.sql.SparkSession
+import org.apache.spark._
+import org.apache.spark.SparkContext._
+import org.apache.spark.sql._
+import org.apache.log4j._
+import org.apache.spark.storage.StorageLevel._
+
+object BatchLayer_BFSI {
+  
+case class Customers (cust_id: Int,first_name: String,
+ last_name: String,date_of_birth:java.sql.Timestamp,street_address :String,
+ city: String,state: String,zipcode:Int,email: String,
+ kyc: String,phone_number: Int,aadhar_card: Int,gender:String,register_date:java.sql.Timestamp,occupation:String)
+
+  def customer_mapper(line:String): Customers = {
+   val format=new java.text.SimpleDateFormat("yyyy-MM-dd")
+  val fields=line.split(',')
+    val customers:Customers = Customers(fields(0).toInt,fields(1).toString(),fields(2).toString(),new java.sql.Timestamp(format.parse(fields(3)).getTime()),fields(4).toString(),fields(5).toString(),fields(6).toString()
+	,fields(7).toInt,fields(8).toString(),fields(9).toString(),fields(10).toInt,fields(11).toInt,fields(12).toString(),new java.sql.Timestamp(format.parse(fields(13)).getTime()),fields(14).toString()) 
+    return customers }
+  
+
+  case class atm_trans (trans_id: Int,atm_id: Int)
+
+  def atm_trans_mapper(line:String): atm_trans = {
+
+  val fields=line.split(',')
+    val atmtrans:atm_trans= atm_trans(fields(0).toInt,fields(1).toInt) 
+    return atmtrans
+  }
+  
+
+  
+  
+case class account_cust(account_no: String,customer_id: Int)
+
+  def accountcustomer_mapper(line:String): account_cust = {
+  val fields=line.split(',')
+  val accust:account_cust = account_cust(fields(0).toString,fields(1).toInt) 
+  return accust
+  }
+  
+case class accounts(account_no: String,account_balance :Int,branch_id: Int,
+date_opened:java.sql.Timestamp ,account_type: String)
+
+  def accounts_mapper(line:String): accounts = {
+  val format=new java.text.SimpleDateFormat("yyyy-MM-dd")
+  val fields=line.split(',')
+  val acc:accounts = accounts(fields(0).toString(),fields(1).toInt,fields(2).toInt,new java.sql.Timestamp(format.parse(fields(3)).getTime()),fields(4).toString()) 
+  return acc
+  }
+  
+  def isEmpty(x: String) = x == null || x.trim.isEmpty
+  
+  
+case class loans(loan_id: Int,loan_branch :Int,duration_in_months: Int,
+loan_start_date:java.sql.Timestamp ,interest_rate: String,loan_taken:Int,loan_paid:String,amount_tobe_paid: String,loantype_id:Int,cust_id:Int)
+
+ def loans_mapper(line:String):loans = {
+  
+  
+  
+  val format=new java.text.SimpleDateFormat("yyyy-MM-dd")
+ val fields=line.split(',')
+   val loan:loans = loans(fields(0).toInt,fields(1).toInt,fields(2).toInt,new java.sql.Timestamp(format.parse(fields(3)).getTime()),fields(4).toString,fields(5).toInt,fields(6).toString(),fields(7).toString,fields(8).toInt,fields(9).toInt) 
+    return loan
+  }
+  
+  
+  
+    case class bank_trans(trans_id: Int,trans_type :String,amount: Int,dateoftrans:java.sql.Timestamp ,account_no: Int,cc_number:String,loan_id:Int)
+
+  def bank_trans_mapper(line:String):bank_trans= {
+  val format=new java.text.SimpleDateFormat("yyyy-MM-dd")
+  val fields=line.split(',')
+  
+  var Field6 = fields(6)    
+    if(isEmpty(fields(6))){
+      Field6 = "0.0"}
+  var Field5 = fields(5)    
+    if(isEmpty(fields(6))){
+      Field5 = "0.0"}
+    var Field4 = fields(4)    
+    if(isEmpty(fields(4))){
+      Field4 = "0.0"}
+  val banktrans:bank_trans = bank_trans(fields(0).toInt,fields(1).toString(),fields(2).toInt,new java.sql.Timestamp(format.parse(fields(3)).getTime()),Field4.toInt,Field5.toString(),Field6.toInt)
+  return banktrans
+  }
+
+  
+case class credit_cards(cc_number: String,maximum_limit :Int,
+expiry_date:java.sql.Timestamp ,limit_used: Int,credit_score:Int,cust_id:Int,issue_date :java.sql.Timestamp)
+
+  def credit_cards_mapper(line:String):credit_cards= {
+  val format=new java.text.SimpleDateFormat("yyyy-MM-dd")
+  val fields=line.split(',')
+    val cc:credit_cards = credit_cards(fields(0).toString(),fields(1).toInt,new java.sql.Timestamp(format.parse(fields(2)).getTime()),fields(3).toInt,fields(4).toInt,fields(5).toInt,new java.sql.Timestamp(format.parse(fields(6)).getTime()))
+	return cc
+  } 
+  
+  def main(args: Array[String]) {
+    Logger.getLogger("org").setLevel(Level.ERROR)
+    val SparkConf = new SparkConf().setAppName("cts.analytics.BatchLayer_BFSI")
+      val spark = SparkSessionSingleton.getInstance(SparkConf)
+    import spark.implicits._
+    
+  
+    val line1 = spark.sparkContext.textFile("/user/suramvinayreddy5167/bfms/customers/*/*")
+    val line2 =spark.sparkContext.textFile("/user/suramvinayreddy5167/bfms/bank_transactions/*/*")
+    val line3 =spark.sparkContext.textFile("/user/suramvinayreddy5167/bfms/atm_transactions/*/*")
+    val line4 =spark.sparkContext.textFile("user/suramvinayreddy5167/bfms/accountscustomers/*/")
+    val line5 = spark.sparkContext.textFile("/user/suramvinayreddy5167/bfms/accounts/hot/*")
+    val lines6 =  spark.sparkContext.textFile("/user/suramvinayreddy5167/bfms/loans/hot/*")	
+    val lines7 = spark.sparkContext.textFile("/user/suramvinayreddy5167/bfms/creditcards/*/*")
+
+    
+    
+    val Customers = line1.map(customer_mapper)
+    val CustDF = Customers.toDF()
+    CustDF.printSchema()
+    CustDF.createOrReplaceTempView("customers");
+
+    val atm_trans = line3.map(atm_trans_mapper)
+   
+    val Atm_trans = atm_trans.toDF()
+    Atm_trans.printSchema()
+    Atm_trans.createOrReplaceTempView("atm_trans");
+
+
+    val account_cust =line4.map(accountcustomer_mapper)
+    val  accountcust =account_cust.toDF()
+    accountcust.createOrReplaceTempView("account_customers");
+
+
+   val bank_trans =line2.map(bank_trans_mapper)
+   val banktrans = bank_trans.toDF()
+   banktrans.createOrReplaceTempView("bank_trans");
+
+   val accounts =line5.map(accounts_mapper)
+   val Accounts = accounts.toDF()
+   Accounts.createOrReplaceTempView("accounts")
+
+   val loans =lines6.map(loans_mapper)
+   val Loans = loans.toDF()
+   Loans.createOrReplaceTempView("loans")
+   
+
+   
+   val credit_cards =lines7.map(credit_cards_mapper)
+   val Credit_cards = credit_cards.toDF()
+   Credit_cards.createOrReplaceTempView("credit_cards")
+   
+   
+    val hivetable = spark.table("vvloan_types")
+    hivetable.createOrReplaceTempView("loan_types");
+    
+    val hivetable1 = spark.table("vvatm_loc")
+    hivetable1.createOrReplaceTempView("atm_loc");
+     
+
+    
+    val hivetable2 = spark.table("vvbranches")
+    hivetable2.createOrReplaceTempView("branches");
+
+    val  transmntwise= spark.sql("select count(*) as transactionformonth,c.cust_id,c.first_name, year(b.dateoftrans) as year,month(b.dateoftrans) as trans_month from bank_trans b inner join accounts ac on ac.account_no=b.account_no inner join customers c on c.cust_id=ac.customer_id group by month(b.dateoftrans),year(b.dateoftrans),c.first_name,c.cust_id order by transactionformonth desc limit 10")
+   println("this prints the number of transaction done by customer in month wise")
+   transmntwise.show()    
+    
+    val branchwiseloan = spark.sql("select b.branch_id,b.branch_name,sum(l.loan_taken) as total_loan,from branches b  join loans l on l.loan_branch=b.branch_id group by b.branch_id,b.branch_name");
+   println("this prints the branch wise sum of loan taken ")
+    branchwiseloan.show()
+    
+   val totalfund=spark.sql("select b.branch_id,b.branch_name,b.street_address,a.account_type,sum(a.account_balance) as total_amount from branches b  join accounts a on b.branch_id=b.branch_id group by a.branch_id,a.account_type ,b.branch_name,b.street_address order by total_amount desc limit 1")
+   println("sum of account balance of customers branchwise")   
+   totalfund.show()
+
+
+   val creditscore=spark.sql("select * from credit_cards cc join customers c on c.cust_id=cc.cust_id where maximum_limit>50000 and credit_score<800")
+   println("this prints the customers with less creditscore")
+   creditscore.show()
+
+  val newaccounts = spark.sql("select count(*) from accounts where date_opened >'2020-02-01'")
+println("new accounts after febraury")
+newaccounts.show()
+
+spark.stop()
+ }   
+  
+}
+
+
+object SparkSessionSingleton {
+  @transient  private var instance: SparkSession = _
+  def getInstance(sparkConf: SparkConf): SparkSession = {
+    if (instance == null) {
+      instance = SparkSession
+        .builder
+        .config(sparkConf)
+        .enableHiveSupport()
+        .getOrCreate()
+    }
+    instance
+  }
+}

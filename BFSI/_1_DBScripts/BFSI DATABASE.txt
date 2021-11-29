@@ -1,0 +1,36 @@
+create table vvloan_types(loantype_id int primary key,loan_name varchar(20),interest_rate varchar(10),loan_duration_months varchar(15),loan_limit_in_lakhs varchar(10));
+
+
+create table vvatm_loc(atm_id int primary key,area varchar(25),city varchar(25));
+
+
+create table vvbranches(branch_id int primary key,branch_name varchar(25),street_address varchar(25),city varchar(25),state varchar(25),zipcode int);
+
+
+create table vvemployees(emp_id int primary key, first_name varchar(25),last_name varchar(25),supervisor_id int,gender enum('m','f','o'),date_of_birth date,street_address varchar(25),city varchar(25),state varchar(25),zipcode int,phone varchar(10),constraint fk_employees_empid  foreign key (supervisor_id) references vvemployees(emp_id));
+
+
+create table vvbranch_employees(branch_id int,emp_id int,start_date date,end_date date, constraint fk_branchesid foreign key (branch_id) references vvbranches(branch_id),constraint fk_employeeeid foreign key (emp_id) references vvemployees(emp_id));
+
+
+create table vvcustomers(cust_id int primary key auto_increment,first_name varchar(25),last_name varchar(25),date_of_birth date,street_address varchar(35),city varchar(15),state varchar(15),zipcode int,email varchar(25),kyc enum('y','n'),phone_number varchar(13),aadhar_card varchar(12),gender enum('f','m','o'),register_date date,occupation enum('salaried','self_employeed'),constraint ucc_aadhar_card unique(aadhar_card));
+
+create table vvcredit_cards(cc_number varchar(16) primary key, maximum_limit decimal(8,2), expiry_date date,limit_used decimal(8,2),credit_score int,cust_id int,issue_date date,constraint fk_creditcard_custid foreign key (cust_id) references vvcustomers(cust_id));
+
+
+create table vvloans(loan_id int primary key auto_increment,loan_branch int,duration_in_months int,loan_startdate date, interest_rate decimal(4,2),loan_taken decimal(10,2),loan_paid decimal(10,2),amount_tobe_paid decimal(10,2),loantype_id int,cust_id int, constraint fk_loancust_id foreign key (cust_id) references vvcustomers(cust_id),constraint fk_loantypeid foreign key (loantype_id) references vvloan_types(loantype_id),constraint fk_laonsloan_kbranch foreign key (loan_branch) references vvbranches(branch_id));
+
+
+create table vvaccounts(account_no int primary key,account_balance decimal(10,2),branch_id int, date_opened date,account_type enum('savings','rdeposit','fdeposit','current','salary'),constraint fk_accountsbranchid  foreign key (branch_id) references vvbranches(branch_id));
+
+
+create table vvaccounts_customers(account_no int,customer_id int,constraint fk_accountno foreign key (account_no) references vvaccounts(account_no),constraint fk_custid foreign key (customer_id) references vvcustomers(cust_id));
+
+
+create table vvbank_transactions(trans_id int primary key,trans_type enum('cr','dr','emi'),amount decimal(8,2) ,date date,account_no int,cc_number varchar(16),loan_id int,constraint fk_btransactionsaccountno foreign key (account_no) references vvaccounts(account_no),constraint fk_btransloanid foreign key(loan_id) references vvloans(loan_id),constraint fk_btransactions_ccnumber foreign key (cc_number) references vvcredit_cards(cc_number));
+
+
+create table vvatm_transactions(trans_id int primary key,atm_id int, constraint fk_atmtransactionatmid foreign key (atm_id) references vvatm_loc(atm_id),constraint fk_atmtransid foreign key (trans_id) references vvbank_transactions(trans_id));
+
+
+create table vvdebit_cards(dc_number varchar(16) primary key,account_no int, expiry_date date,issue_date date,constraint fk_debitcardaccount_id foreign key (account_no) references vvaccounts(account_no));

@@ -1,0 +1,29 @@
+SQL / HIVE / SPARK [BATCH]
+
+Generate ER Specific sample data from https://mockaroo.com/
+====================
+*)Find the total current cash flow branch wise
+*)ATM transactions report max usage/city wise
+*)Creditcard holders with higher limits and good cibil scores
+*)Loans outstanding EMI Tracker
+*)Monthly transactions report
+*)New account openings report
+*)List of Accounts with less than minimum balance applying for credit facilities 
+*)Duplicate Accounts 
+*)Loan Defaulters
+
+[STREAM]
+
+Based on SampleData1.csv 
+====================
+^)Ignore the fact that amounts are not in 100s
+^)Check line no 24-31,151-154,251-254
+^)Based on Lat/Long it is visible that in some cases for same atmcard,multiple transactions have happened instantly,at physical distance exceeding 500 meters which is impossible humanly.
+^)Use the ‘haversine’ formula to calculate distance https://www.movable-type.co.uk/scripts/latlong.html 
+====================
+*)Create a stateless batch to track & block fraudelant ATM Cards
+*)In a defined window,find out the ATMs where frauds are happening,so that corrective actions can be initiated
+*)maintain stateful info about ATM_Code+ATM_Type, so that concerned Banks can be notified
+====================
+^)Batch,Window should be customizable
+^)Generate more data if required for runtime visualization
